@@ -8,61 +8,63 @@ import (
 )
 
 type Dialect struct {
-	Db *sql.DB
+	db *sql.DB
 }
 
-func (dia *Dialect) Create(){
+func (dia *Dialect) Create() {
 
 	db, err := sql.Open("mysql",
 		"root:@tcp(127.0.0.1:3306)/test")
 	if err != nil {
 		log.Fatal(err)
 	}
-	dia.Db = db
+	dia.db = db
 }
 
-func (dia *Dialect) isConnected() bool{
-	error :=dia.Db.Ping()
+func (dia *Dialect) isConnected() bool {
+	error := dia.db.Ping()
 	if error != nil {
 		return false
 	}
 	return true
 }
 
-func (dia *Dialect) Save(sqlStr string) (int64,error) {
-	if dia.Db == nil || !dia.isConnected() {
+func (dia *Dialect) Save(sqlStr string) (int64, error) {
+	log.Printf("sql : %s\n",sqlStr)
+	if dia.db == nil || !dia.isConnected() {
 		dia.Create()
 	}
-	stmt , err:=dia.Db.Prepare(sqlStr)
+	stmt, err := dia.db.Prepare(sqlStr)
 	if err != nil {
-		return -1 , err
+		return -1, err
 	}
 
-	result , err := stmt.Exec()
+	result, err := stmt.Exec()
 	if err != nil {
 		log.Fatal(err)
-		return -1 , err
+		return -1, err
 	}
-	id , err := result.LastInsertId();
+	id, err := result.LastInsertId();
 	if err != nil {
 		log.Fatal(err)
-		return -1 , err
+		return -1, err
 	}
-	return id , nil
+	return id, nil
 }
 
-func (dia *Dialect) Query(sqlStr string) *list.List{
-	if dia.Db == nil || !dia.isConnected() {
+func (dia *Dialect) Query(sqlStr string) (*list.List, error) {
+	log.Printf("sql : %s\n",sqlStr)
+	if dia.db == nil || !dia.isConnected() {
 		dia.Create()
 	}
 
-	rows , err :=dia.Db.Query(sqlStr)
+	rows, err := dia.db.Query(sqlStr)
 	if err != nil {
-		log.Fatal(err.Error())
+		return nil, err
 	}
-	columns , err := rows.Columns()
+	columns, err := rows.Columns()
 	if err != nil {
-		log.Fatal(err.Error())
+		return nil, err
 	}
 	values := make([]sql.RawBytes, len(columns))
 
@@ -83,6 +85,7 @@ func (dia *Dialect) Query(sqlStr string) *list.List{
 		err = rows.Scan(scanArgs...)
 		if err != nil {
 			log.Fatal(err.Error()) // proper error handling instead of panic in your app
+			return nil, err
 		}
 
 		// Now do something with the data.
@@ -100,11 +103,11 @@ func (dia *Dialect) Query(sqlStr string) *list.List{
 	}
 
 	if err = rows.Err(); err != nil {
-		log.Fatal(err.Error()) // proper error handling instead of panic in your app
+		return nil, err
 	}
-	return retList
+	return retList, nil
 }
 
-func (dia *Dialect) Close(){
-	dia.Db.Close()
+func (dia *Dialect) Close() {
+	dia.db.Close()
 }

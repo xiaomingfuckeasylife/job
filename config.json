@@ -1,0 +1,10 @@
+{
+  "ChainApi": {
+    "GetBlockByHash": "http://node-regtest-03-01.eadd.co:23334/api/v1/block/details/hash/",
+    "GetTransactionByHash": "http://node-regtest-03-01.eadd.co:23334/api/v1/transaction/"
+  },
+  "Job": {
+    "TxPeriod": 5,
+    "FeePeriod": 3
+  }
+}
