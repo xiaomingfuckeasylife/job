@@ -40,7 +40,7 @@ var syncHeight int
 func main() {
 
 	dia := db.Dialect{}
-	dia.Create()
+	dia.Create(conf.Config.DriverName,conf.Config.DataSourceName)
 	defer dia.Close()
 
 	cron.AddScheduleBySec(TX_PERIOD, func() {

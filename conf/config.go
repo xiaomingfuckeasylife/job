@@ -14,10 +14,12 @@ var (
 )
 
 type config struct {
-	ChainApi      chainApi `json:"ChainApi"`
-	Job           job      `json:"Job"`
-	Fee           fee      `json:"Fee"`
-	InitialHeight int64
+	ChainApi       chainApi `json:"ChainApi"`
+	Job            job      `json:"Job"`
+	Fee            fee      `json:"Fee"`
+	InitialHeight  int64
+	DriverName     string
+	DataSourceName string
 }
 
 type fee struct {

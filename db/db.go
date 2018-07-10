@@ -5,16 +5,19 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang/go/src/pkg/log"
 	"container/list"
+	"gx/ipfs/QmVmDhyTTUcQXFD1rRQ64fGLMSAoaQvNH3hwuaCFAPq2hy/errors"
 )
 
 type Dialect struct {
 	db *sql.DB
 }
 
-func (dia *Dialect) Create() {
+func (dia *Dialect) Create(driver string,source string) {
 
-	db, err := sql.Open("mysql",
-		"root:@tcp(127.0.0.1:3306)/test")
+	//db, err := sql.Open("mysql",
+	//	"root:@tcp(127.0.0.1:3306)/test")
+	db, err := sql.Open(driver,
+		source)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -32,7 +35,7 @@ func (dia *Dialect) isConnected() bool {
 func (dia *Dialect) Save(sqlStr string) (int64, error) {
 	log.Printf("sql : %s\n",sqlStr)
 	if dia.db == nil || !dia.isConnected() {
-		dia.Create()
+		return -1 , errors.New("db is nil or closed")
 	}
 	stmt, err := dia.db.Prepare(sqlStr)
 	if err != nil {
@@ -55,7 +58,7 @@ func (dia *Dialect) Save(sqlStr string) (int64, error) {
 func (dia *Dialect) Query(sqlStr string) (*list.List, error) {
 	log.Printf("sql : %s\n",sqlStr)
 	if dia.db == nil || !dia.isConnected() {
-		dia.Create()
+		return nil , errors.New("db is nil or closed")
 	}
 
 	rows, err := dia.db.Query(sqlStr)

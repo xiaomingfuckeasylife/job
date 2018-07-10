@@ -16,5 +16,7 @@
     "SenderPubAddr":"EbxU18T3M9ufnrkRY7NLt6sKyckDW4VAsA",
     "SenderPrivKey":"C740869D015E674362B1F441E3EDBE1CBCF4FE8B709AA1A77E5CCA2C92BAF99D"
   },
-  "InitialHeight":35300
+  "InitialHeight":35300,
+  "driverName" :"mysql",
+  "dataSourceName" : "root:@tcp(127.0.0.1:3306)/test"
 }
