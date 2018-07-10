@@ -3,9 +3,9 @@ package db
 import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/golang/go/src/pkg/log"
 	"container/list"
-	"gx/ipfs/QmVmDhyTTUcQXFD1rRQ64fGLMSAoaQvNH3hwuaCFAPq2hy/errors"
+	"log"
+	"errors"
 )
 
 type Dialect struct {

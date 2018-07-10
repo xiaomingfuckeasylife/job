@@ -1,20 +1,20 @@
 package main
 
 import (
-	"job/conf"
+	"github.com/xiaomingfuckeasylife/job/conf"
 	"net/http"
 	"log"
 	"io/ioutil"
 	"encoding/json"
 	"fmt"
-	"job/db"
-	"job/cron"
+	"github.com/xiaomingfuckeasylife/job/db"
+	"github.com/xiaomingfuckeasylife/job/cron"
 	"strings"
-	"bytom/src/github.com/bytom/errors"
 	"strconv"
 	"encoding/hex"
 	"sync"
 	"math"
+	"errors"
 )
 
 var (
