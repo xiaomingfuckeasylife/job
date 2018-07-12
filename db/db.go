@@ -8,25 +8,29 @@ import (
 	"errors"
 )
 
+
 type Dialect struct {
 	db *sql.DB
+	driver string
+	source string
 }
 
-func (dia *Dialect) Create(driver string,source string) {
-
-	//db, err := sql.Open("mysql",
-	//	"root:@tcp(127.0.0.1:3306)/test")
+func (dia *Dialect) Create(driver string,source string) error{
 	db, err := sql.Open(driver,
 		source)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	dia.driver = driver
+	dia.source = source
 	dia.db = db
+	return nil
 }
 
 func (dia *Dialect) isConnected() bool {
 	error := dia.db.Ping()
 	if error != nil {
+		log.Println(error.Error())
 		return false
 	}
 	return true
@@ -34,8 +38,20 @@ func (dia *Dialect) isConnected() bool {
 
 func (dia *Dialect) Save(sqlStr string) (int64, error) {
 	log.Printf("sql : %s\n",sqlStr)
-	if dia.db == nil || !dia.isConnected() {
-		return -1 , errors.New("db is nil or closed")
+	if dia.db == nil || !dia.isConnected(){
+		if dia.driver != "" && dia.source != "" {
+			log.Println("start a new db instance ,close the old one ")
+			err := dia.Close()
+			if err != nil {
+				return -1 , err
+			}
+			err = dia.Create(dia.driver,dia.source)
+			if err != nil {
+				return -1 , err
+			}
+		}else{
+			return -1 , errors.New("db is nil or closed")
+		}
 	}
 	stmt, err := dia.db.Prepare(sqlStr)
 	if err != nil {
@@ -44,12 +60,10 @@ func (dia *Dialect) Save(sqlStr string) (int64, error) {
 
 	result, err := stmt.Exec()
 	if err != nil {
-		log.Fatal(err)
 		return -1, err
 	}
 	id, err := result.LastInsertId();
 	if err != nil {
-		log.Fatal(err)
 		return -1, err
 	}
 	return id, nil
@@ -57,8 +71,20 @@ func (dia *Dialect) Save(sqlStr string) (int64, error) {
 
 func (dia *Dialect) Query(sqlStr string) (*list.List, error) {
 	log.Printf("sql : %s\n",sqlStr)
-	if dia.db == nil || !dia.isConnected() {
-		return nil , errors.New("db is nil or closed")
+	if dia.db == nil || !dia.isConnected(){
+		if dia.driver != "" && dia.source != "" {
+			log.Println("start a new db instance , close the old one ")
+			err := dia.Close()
+			if err != nil {
+				return nil , err
+			}
+			err = dia.Create(dia.driver,dia.source)
+			if err != nil {
+				return nil , err
+			}
+		}else{
+			return nil , errors.New("db is nil or closed")
+		}
 	}
 
 	rows, err := dia.db.Query(sqlStr)
@@ -87,7 +113,6 @@ func (dia *Dialect) Query(sqlStr string) (*list.List, error) {
 		// get RawBytes from data
 		err = rows.Scan(scanArgs...)
 		if err != nil {
-			log.Fatal(err.Error()) // proper error handling instead of panic in your app
 			return nil, err
 		}
 
@@ -111,6 +136,6 @@ func (dia *Dialect) Query(sqlStr string) (*list.List, error) {
 	return retList, nil
 }
 
-func (dia *Dialect) Close() {
-	dia.db.Close()
+func (dia *Dialect) Close() error{
+	return dia.db.Close()
 }

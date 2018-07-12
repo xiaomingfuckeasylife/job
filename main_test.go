@@ -2,9 +2,9 @@ package main
 
 import (
 	"testing"
-	"job/db"
 	"log"
-	"fmt"
+	"github.com/xiaomingfuckeasylife/job/db"
+	"math/rand"
 )
 
 func Test_processTx(t *testing.T){
@@ -17,5 +17,7 @@ func Test_processTx(t *testing.T){
 
 
 func Test_other(t *testing.T){
-	fmt.Println('a','f','0','9')
+	//print(time.Now().Unix())
+	rand.Seed(1531308367)
+	print(rand.Int31n(10))
 }
