@@ -33,9 +33,11 @@ var (
 	InitialHeight                   = conf.Config.InitialHeight
 )
 
-var syncTxlock sync.RWMutex
-var feeLock sync.RWMutex
-var syncHeight int
+var (
+	syncTxlock sync.RWMutex
+    feeLock sync.RWMutex
+	syncHeight int
+)
 
 func main() {
 

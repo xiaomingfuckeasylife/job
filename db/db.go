@@ -6,6 +6,7 @@ import (
 	"container/list"
 	"log"
 	"errors"
+	"database/sql/driver"
 )
 
 
@@ -27,25 +28,28 @@ func (dia *Dialect) Create(driver string,source string) error{
 	return nil
 }
 
-func (dia *Dialect) isConnected() bool {
+func (dia *Dialect) isConnected() error {
 	error := dia.db.Ping()
 	if error != nil {
 		log.Println(error.Error())
-		return false
+		return error
 	}
-	return true
+	return nil
 }
 
 func (dia *Dialect) Save(sqlStr string) (int64, error) {
 	log.Printf("sql : %s\n",sqlStr)
-	if dia.db == nil || !dia.isConnected(){
+	if dia.db == nil || dia.isConnected() != nil{
 		if dia.driver != "" && dia.source != "" {
 			log.Println("start a new db instance ,close the old one ")
-			err := dia.Close()
-			if err != nil {
-				return -1 , err
+			// server closed the collection .
+			if dia.isConnected() != driver.ErrBadConn {
+				err := dia.Close()
+				if err != nil {
+					return -1 , err
+				}
 			}
-			err = dia.Create(dia.driver,dia.source)
+			err := dia.Create(dia.driver,dia.source)
 			if err != nil {
 				return -1 , err
 			}
@@ -71,14 +75,17 @@ func (dia *Dialect) Save(sqlStr string) (int64, error) {
 
 func (dia *Dialect) Query(sqlStr string) (*list.List, error) {
 	log.Printf("sql : %s\n",sqlStr)
-	if dia.db == nil || !dia.isConnected(){
+	if dia.db == nil || dia.isConnected() != nil{
 		if dia.driver != "" && dia.source != "" {
 			log.Println("start a new db instance , close the old one ")
-			err := dia.Close()
-			if err != nil {
-				return nil , err
+			// server closed the collection .
+			if dia.isConnected() != driver.ErrBadConn {
+				err := dia.Close()
+				if err != nil {
+					return nil , err
+				}
 			}
-			err = dia.Create(dia.driver,dia.source)
+			err := dia.Create(dia.driver,dia.source)
 			if err != nil {
 				return nil , err
 			}
