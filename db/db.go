@@ -7,6 +7,7 @@ import (
 	"log"
 	"errors"
 	"database/sql/driver"
+	"fmt"
 )
 
 
@@ -31,7 +32,7 @@ func (dia *Dialect) Create(driver string,source string) error{
 func (dia *Dialect) isConnected() error {
 	error := dia.db.Ping()
 	if error != nil {
-		log.Println(error.Error())
+		log.Printf("%T %s \n" ,error, error.Error())
 		return error
 	}
 	return nil
@@ -44,6 +45,7 @@ func (dia *Dialect) Save(sqlStr string) (int64, error) {
 			log.Println("start a new db instance ,close the old one ")
 			// server closed the collection .
 			if dia.isConnected() != driver.ErrBadConn {
+				fmt.Printf("%v",dia)
 				err := dia.Close()
 				if err != nil {
 					return -1 , err
@@ -80,6 +82,7 @@ func (dia *Dialect) Query(sqlStr string) (*list.List, error) {
 			log.Println("start a new db instance , close the old one ")
 			// server closed the collection .
 			if dia.isConnected() != driver.ErrBadConn {
+				fmt.Printf("%v",dia)
 				err := dia.Close()
 				if err != nil {
 					return nil , err
