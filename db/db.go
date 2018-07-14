@@ -22,6 +22,8 @@ func (dia *Dialect) Create(driver string,source string) error{
 	if err != nil {
 		return err
 	}
+	db.SetMaxOpenConns(5)
+	db.SetMaxIdleConns(3)
 	dia.driver = driver
 	dia.source = source
 	dia.db = db
