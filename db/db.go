@@ -6,7 +6,7 @@ import (
 	"container/list"
 	"log"
 	"errors"
-	"github.com/xiaomingfuckeasylife/job/cron"
+	"time"
 )
 
 
@@ -24,12 +24,10 @@ func (dia *Dialect) Create(driver string,source string) error{
 	}
 	db.SetMaxOpenConns(5)
 	db.SetMaxIdleConns(3)
+	db.SetConnMaxLifetime(time.Second * 14440)
 	dia.driver = driver
 	dia.source = source
 	dia.db = db
-	go cron.AddScheduleBySec(60, func() {
-		dia.ping()
-	})
 	return nil
 }
 
@@ -152,11 +150,4 @@ func (dia *Dialect) Query(sqlStr string) (*list.List, error) {
 
 func (dia *Dialect) Close() error{
 	return dia.db.Close()
-}
-
-func (dia *Dialect) ping() {
-	_ , err := dia.db.Query("select 1")
-	if err != nil {
-		log.Printf("error ping %T || %s \n",err, err.Error())
-	}
 }
