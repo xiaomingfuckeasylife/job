@@ -6,8 +6,7 @@ import (
 	"container/list"
 	"log"
 	"errors"
-	"database/sql/driver"
-	"fmt"
+	"github.com/xiaomingfuckeasylife/job/cron"
 )
 
 
@@ -26,13 +25,16 @@ func (dia *Dialect) Create(driver string,source string) error{
 	dia.driver = driver
 	dia.source = source
 	dia.db = db
+	go cron.AddScheduleBySec(60, func() {
+		dia.ping()
+	})
 	return nil
 }
 
 func (dia *Dialect) isConnected() error {
 	error := dia.db.Ping()
 	if error != nil {
-		log.Printf("%T %s \n" ,error, error.Error())
+		log.Printf("%T || %s \n" ,error, error.Error())
 		return error
 	}
 	return nil
@@ -44,13 +46,13 @@ func (dia *Dialect) Save(sqlStr string) (int64, error) {
 		if dia.driver != "" && dia.source != "" {
 			log.Println("start a new db instance ,close the old one ")
 			// server closed the collection .
-			if dia.isConnected() != driver.ErrBadConn {
-				fmt.Printf("%v",dia)
-				err := dia.Close()
-				if err != nil {
-					return -1 , err
-				}
-			}
+			//if dia.isConnected() != driver.ErrBadConn {
+			//	fmt.Printf("%v",dia)
+			//	err := dia.Close()
+			//	if err != nil {
+			//		return -1 , err
+			//	}
+			//}
 			err := dia.Create(dia.driver,dia.source)
 			if err != nil {
 				return -1 , err
@@ -81,13 +83,13 @@ func (dia *Dialect) Query(sqlStr string) (*list.List, error) {
 		if dia.driver != "" && dia.source != "" {
 			log.Println("start a new db instance , close the old one ")
 			// server closed the collection .
-			if dia.isConnected() != driver.ErrBadConn {
-				fmt.Printf("%v",dia)
-				err := dia.Close()
-				if err != nil {
-					return nil , err
-				}
-			}
+			//if dia.isConnected() != driver.ErrBadConn {
+			//	fmt.Printf("%v",dia)
+			//	err := dia.Close()
+			//	if err != nil {
+			//		return nil , err
+			//	}
+			//}
 			err := dia.Create(dia.driver,dia.source)
 			if err != nil {
 				return nil , err
@@ -148,4 +150,11 @@ func (dia *Dialect) Query(sqlStr string) (*list.List, error) {
 
 func (dia *Dialect) Close() error{
 	return dia.db.Close()
+}
+
+func (dia *Dialect) ping() {
+	_ , err := dia.db.Query("select 1")
+	if err != nil {
+		log.Printf("error ping %T || %s \n",err, err.Error())
+	}
 }
