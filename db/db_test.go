@@ -4,13 +4,14 @@ import (
 	"testing"
 	"log"
 	"fmt"
+	"github.com/xiaomingfuckeasylife/job/conf"
 )
 
 func TestDb(t *testing.T){
 
 	dia := Dialect{}
-	dia.Create()
-	id , err := dia.Save("insert into test(name,age) values ('test',111)")
+	dia.Create(conf.Config.DriverName,conf.Config.DataSourceName)
+	id , err := dia.Exec("update test set age = 1111 where id = 1")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -31,4 +32,66 @@ func TestDb(t *testing.T){
 	dia.Close()
 	fmt.Println("Connected ? %t",dia.isConnected())
 
+}
+
+func Test_dbTx(t *testing.T){
+	dia := Dialect{}
+	dia.Create("mysql","root:@tcp(127.0.0.1:3306)/test")
+	defer dia.Close()
+	tx , err := dia.Begin()
+	if err != nil {
+		fmt.Printf("%v",err)
+		return
+	}
+	_ , err = dia.ExecTx("update test set age = 1001 ",tx)
+	if err != nil {
+		fmt.Printf("%v",err)
+		return
+	}
+	_ , err = dia.ExecTx("update test set age = 1001 ",tx)
+	if err != nil {
+		fmt.Printf("%v",err)
+		return
+	}
+	_ , err = dia.ExecTx("update test set age = 1002 ",tx)
+	if err != nil {
+		fmt.Printf("%v",err)
+		return
+	}
+	_ , err = dia.ExecTx("update test set age = 1003 ",tx)
+	if err != nil {
+		fmt.Printf("%v",err)
+		return
+	}
+	_ , err = dia.ExecTx("update test set age = 1004 ",tx)
+	if err != nil {
+		fmt.Printf("%v",err)
+		return
+	}
+	_ , err = dia.ExecTx("update test set age = 1005 ",tx)
+	if err != nil {
+		fmt.Printf("%v",err)
+		return
+	}
+	_ , err = dia.ExecTx("update test set age = 1006 ",tx)
+	if err != nil {
+		fmt.Printf("%v",err)
+		return
+	}
+	//dia.Rollback(tx)
+	//if err != nil {
+	//	fmt.Printf("%v",err)
+	//	return
+	//}
+	err = dia.Commit(tx)
+	if err != nil {
+		fmt.Printf("%v",err)
+		return
+	}
+
+	_, err = dia.Exec("update test set age = 1007")
+	if err != nil {
+		fmt.Printf("%v",err)
+		return
+	}
 }

@@ -14,6 +14,9 @@ type Dialect struct {
 	db *sql.DB
 	driver string
 	source string
+	maxConns int
+	maxIdles int
+	connMaxLifeTime time.Duration
 }
 
 func (dia *Dialect) Create(driver string,source string) error{
@@ -22,9 +25,21 @@ func (dia *Dialect) Create(driver string,source string) error{
 	if err != nil {
 		return err
 	}
-	db.SetMaxOpenConns(5)
-	db.SetMaxIdleConns(3)
-	db.SetConnMaxLifetime(time.Second * 14440)
+	if dia.maxConns == 0 {
+		db.SetMaxOpenConns(5 )
+	}else {
+		db.SetMaxOpenConns(dia.maxConns)
+	}
+	if dia.maxIdles == 0 {
+		db.SetMaxIdleConns(3 )
+	}else {
+		db.SetMaxIdleConns(dia.maxIdles)
+	}
+	if dia.connMaxLifeTime == 0 {
+		db.SetConnMaxLifetime( time.Second * 14440 )
+	}else {
+		db.SetConnMaxLifetime(dia.connMaxLifeTime)
+	}
 	dia.driver = driver
 	dia.source = source
 	dia.db = db
@@ -40,19 +55,51 @@ func (dia *Dialect) isConnected() error {
 	return nil
 }
 
-func (dia *Dialect) Save(sqlStr string) (int64, error) {
+func (dia *Dialect) Begin() (tx *sql.Tx,err error){
+	tx , err = dia.db.Begin()
+	log.Printf(" begin transaction %v\n",tx)
+	return
+}
+
+func (dia *Dialect) Commit(tx *sql.Tx) error {
+	log.Printf(" commit transaction %v\n",tx)
+	return tx.Commit()
+}
+
+func (dia *Dialect) Rollback(tx *sql.Tx) error {
+	log.Printf(" rollback transaction %v\n",tx)
+	return tx.Rollback()
+}
+
+func (dia *Dialect) ExecTx(sqlStr string , tx *sql.Tx) (int64, error) {
+	log.Printf("sql with tx : %s\n",sqlStr)
+	if tx == nil {
+		return -1 , errors.New("tx can not be nil ")
+	}
+	stmt, err := tx.Prepare(sqlStr)
+	if err != nil {
+		return -1, err
+	}
+
+	result, err := stmt.Exec()
+	if err != nil {
+		return -1, err
+	}
+	id, err := result.LastInsertId();
+	if err != nil {
+		return -1, err
+	}
+	if err != nil {
+		return -1, err
+	}
+	return id, nil
+}
+
+func (dia *Dialect) Exec(sqlStr string) (int64, error) {
 	log.Printf("sql : %s\n",sqlStr)
 	if dia.db == nil || dia.isConnected() != nil{
 		if dia.driver != "" && dia.source != "" {
 			log.Println("start a new db instance ,close the old one ")
-			// server closed the collection .
-			//if dia.isConnected() != driver.ErrBadConn {
-			//	fmt.Printf("%v",dia)
-			//	err := dia.Close()
-			//	if err != nil {
-			//		return -1 , err
-			//	}
-			//}
 			err := dia.Create(dia.driver,dia.source)
 			if err != nil {
 				return -1 , err
@@ -74,6 +121,9 @@ func (dia *Dialect) Save(sqlStr string) (int64, error) {
 	if err != nil {
 		return -1, err
 	}
+	if err != nil {
+		return -1, err
+	}
 	return id, nil
 }
 
@@ -82,14 +132,6 @@ func (dia *Dialect) Query(sqlStr string) (*list.List, error) {
 	if dia.db == nil || dia.isConnected() != nil{
 		if dia.driver != "" && dia.source != "" {
 			log.Println("start a new db instance , close the old one ")
-			// server closed the collection .
-			//if dia.isConnected() != driver.ErrBadConn {
-			//	fmt.Printf("%v",dia)
-			//	err := dia.Close()
-			//	if err != nil {
-			//		return nil , err
-			//	}
-			//}
 			err := dia.Create(dia.driver,dia.source)
 			if err != nil {
 				return nil , err
@@ -150,4 +192,28 @@ func (dia *Dialect) Query(sqlStr string) (*list.List, error) {
 
 func (dia *Dialect) Close() error{
 	return dia.db.Close()
+}
+
+func (dia *Dialect) SetMaxOpenConnections(maxConn int) error {
+	if maxConn <= 0 {
+		return errors.New("maxConn must bigger than 0")
+	}
+	dia.maxConns = maxConn
+	return nil
+}
+
+func (dia *Dialect) SetMaxIdles(maxIdles int)  error{
+	if maxIdles <= 0 {
+		return errors.New("maxIdles must bigger than 0")
+	}
+	dia.maxIdles = maxIdles
+	return nil
+}
+
+func (dia *Dialect) SetConnMaxLifeTime(connMaxLifeTime int)  error{
+	if connMaxLifeTime <= 0 {
+		return errors.New("connMaxLifeTime must bigger than 0")
+	}
+	dia.maxIdles = connMaxLifeTime
+	return nil
 }

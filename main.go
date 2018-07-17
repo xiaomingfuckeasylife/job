@@ -181,7 +181,7 @@ func processTx(dia *db.Dialect) (bool, error) {
 			//	continue
 			//}
 			sql := "insert into tx_info (txid,height,memo,timestamp,blockhash) values('" + txId + "'," + strconv.Itoa(blockHeight) + ",'" + memo + "'," + timestamp + ",'" + blockHash + "')"
-			_, err = dia.Save(sql)
+			_, err = dia.Exec(sql)
 			if err != nil {
 				return false, err
 			}
