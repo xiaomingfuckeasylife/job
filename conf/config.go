@@ -1,11 +1,11 @@
 package conf
 
 import (
-	"io/ioutil"
-	"os"
 	"bytes"
 	"encoding/json"
+	"io/ioutil"
 	"log"
+	"os"
 )
 
 var (
@@ -20,6 +20,8 @@ type config struct {
 	InitialHeight  int64
 	DriverName     string
 	DataSourceName string
+	InitialAddressNum string
+	InitialAddressFee string
 }
 
 type fee struct {
@@ -40,6 +42,7 @@ type chainApi struct {
 	GetBlockByHash       string `json:"GetBlockByHash"`
 	GetTransactionByHash string `json:"GetTransactionByHash"`
 	SendTransfer         string `json:"SendTransfer"`
+	GenAddr				 string `json:"GenAddr"`
 }
 
 func init() {

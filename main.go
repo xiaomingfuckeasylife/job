@@ -1,20 +1,20 @@
 package main
 
 import (
-	"github.com/xiaomingfuckeasylife/job/conf"
-	"net/http"
-	"log"
-	"io/ioutil"
-	"encoding/json"
-	"fmt"
-	"github.com/xiaomingfuckeasylife/job/db"
-	"github.com/xiaomingfuckeasylife/job/cron"
-	"strings"
-	"strconv"
 	"encoding/hex"
-	"sync"
-	"math"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/xiaomingfuckeasylife/job/conf"
+	"github.com/xiaomingfuckeasylife/job/cron"
+	"github.com/xiaomingfuckeasylife/job/db"
+	"io/ioutil"
+	"log"
+	"math"
+	"net/http"
+	"strconv"
+	"strings"
+	"sync"
 )
 
 var (
@@ -35,14 +35,14 @@ var (
 
 var (
 	syncTxlock sync.RWMutex
-    feeLock sync.RWMutex
+	feeLock    sync.RWMutex
 	syncHeight int
 )
 
 func main() {
 
 	dia := db.Dialect{}
-	dia.Create(conf.Config.DriverName,conf.Config.DataSourceName)
+	dia.Create(conf.Config.DriverName, conf.Config.DataSourceName)
 	defer dia.Close()
 
 	cron.AddScheduleBySec(TX_PERIOD, func() {
@@ -165,7 +165,7 @@ func processTx(dia *db.Dialect) (bool, error) {
 			txInfo := txArr[i].(map[string]interface{})
 			txId := txInfo["txid"].(string)
 			if int(txInfo["type"].(float64)) != 2 {
-				continue;
+				continue
 			}
 			attributes := txInfo["attributes"].([]interface{})
 			memoByte, err := hex.DecodeString(attributes[0].(map[string]interface{})["data"].(string))
@@ -196,9 +196,9 @@ func processTx(dia *db.Dialect) (bool, error) {
 }
 
 func isValid(memo string) bool {
-	if (len(memo) > 0) {
+	if len(memo) > 0 {
 		for i := 0; i < len(memo); i++ {
-			if (memo[i] > 102 || (memo[i] < 97 && memo[i] > 57) || memo[i] < 48) {
+			if memo[i] > 102 || (memo[i] < 97 && memo[i] > 57) || memo[i] < 48 {
 				return false
 			}
 		}

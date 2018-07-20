@@ -18,5 +18,5 @@
   },
   "InitialHeight":35300,
   "driverName" :"mysql",
-  "dataSourceName" : "root:@tcp(127.0.0.1:3306)/test"
+  "dataSourceName" : "dbadmin:2yrPdTuULV5w9BVUys29Rin8YJ3nnrRd@tcp(aakxzp9adcaf8w.clvpxuatb622.us-west-2.rds.amazonaws.com:3306)/ebdb"
 }

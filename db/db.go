@@ -1,43 +1,42 @@
 package db
 
 import (
-	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
 	"container/list"
-	"log"
+	"database/sql"
 	"errors"
+	_ "github.com/go-sql-driver/mysql"
+	"log"
 	"time"
 )
 
-
 type Dialect struct {
-	db *sql.DB
-	driver string
-	source string
-	maxConns int
-	maxIdles int
+	db              *sql.DB
+	driver          string
+	source          string
+	maxConns        int
+	maxIdles        int
 	connMaxLifeTime time.Duration
 }
 
-func (dia *Dialect) Create(driver string,source string) error{
+func (dia *Dialect) Create(driver string, source string) error {
 	db, err := sql.Open(driver,
 		source)
 	if err != nil {
 		return err
 	}
 	if dia.maxConns == 0 {
-		db.SetMaxOpenConns(5 )
-	}else {
+		db.SetMaxOpenConns(5)
+	} else {
 		db.SetMaxOpenConns(dia.maxConns)
 	}
 	if dia.maxIdles == 0 {
-		db.SetMaxIdleConns(3 )
-	}else {
+		db.SetMaxIdleConns(3)
+	} else {
 		db.SetMaxIdleConns(dia.maxIdles)
 	}
 	if dia.connMaxLifeTime == 0 {
-		db.SetConnMaxLifetime( time.Second * 14440 )
-	}else {
+		db.SetConnMaxLifetime(time.Second * 14440)
+	} else {
 		db.SetConnMaxLifetime(dia.connMaxLifeTime)
 	}
 	dia.driver = driver
@@ -49,32 +48,32 @@ func (dia *Dialect) Create(driver string,source string) error{
 func (dia *Dialect) isConnected() error {
 	error := dia.db.Ping()
 	if error != nil {
-		log.Printf("%T || %s \n" ,error, error.Error())
+		log.Printf("%T || %s \n", error, error.Error())
 		return error
 	}
 	return nil
 }
 
-func (dia *Dialect) Begin() (tx *sql.Tx,err error){
-	tx , err = dia.db.Begin()
-	log.Printf(" begin transaction %v\n",tx)
+func (dia *Dialect) Begin() (tx *sql.Tx, err error) {
+	tx, err = dia.db.Begin()
+	log.Printf(" begin transaction %v\n", tx)
 	return
 }
 
 func (dia *Dialect) Commit(tx *sql.Tx) error {
-	log.Printf(" commit transaction %v\n",tx)
+	log.Printf(" commit transaction %v\n", tx)
 	return tx.Commit()
 }
 
 func (dia *Dialect) Rollback(tx *sql.Tx) error {
-	log.Printf(" rollback transaction %v\n",tx)
+	log.Printf(" rollback transaction %v\n", tx)
 	return tx.Rollback()
 }
 
-func (dia *Dialect) ExecTx(sqlStr string , tx *sql.Tx) (int64, error) {
-	log.Printf("sql with tx : %s\n",sqlStr)
+func (dia *Dialect) ExecTx(sqlStr string, tx *sql.Tx) (int64, error) {
+	log.Printf("sql with tx : %s\n", sqlStr)
 	if tx == nil {
-		return -1 , errors.New("tx can not be nil ")
+		return -1, errors.New("tx can not be nil ")
 	}
 	stmt, err := tx.Prepare(sqlStr)
 	if err != nil {
@@ -85,7 +84,7 @@ func (dia *Dialect) ExecTx(sqlStr string , tx *sql.Tx) (int64, error) {
 	if err != nil {
 		return -1, err
 	}
-	id, err := result.LastInsertId();
+	id, err := result.LastInsertId()
 	if err != nil {
 		return -1, err
 	}
@@ -96,16 +95,16 @@ func (dia *Dialect) ExecTx(sqlStr string , tx *sql.Tx) (int64, error) {
 }
 
 func (dia *Dialect) Exec(sqlStr string) (int64, error) {
-	log.Printf("sql : %s\n",sqlStr)
-	if dia.db == nil || dia.isConnected() != nil{
+	log.Printf("sql : %s\n", sqlStr)
+	if dia.db == nil || dia.isConnected() != nil {
 		if dia.driver != "" && dia.source != "" {
 			log.Println("start a new db instance ,close the old one ")
-			err := dia.Create(dia.driver,dia.source)
+			err := dia.Create(dia.driver, dia.source)
 			if err != nil {
-				return -1 , err
+				return -1, err
 			}
-		}else{
-			return -1 , errors.New("db is nil or closed")
+		} else {
+			return -1, errors.New("db is nil or closed")
 		}
 	}
 	stmt, err := dia.db.Prepare(sqlStr)
@@ -117,7 +116,7 @@ func (dia *Dialect) Exec(sqlStr string) (int64, error) {
 	if err != nil {
 		return -1, err
 	}
-	id, err := result.LastInsertId();
+	id, err := result.LastInsertId()
 	if err != nil {
 		return -1, err
 	}
@@ -128,16 +127,16 @@ func (dia *Dialect) Exec(sqlStr string) (int64, error) {
 }
 
 func (dia *Dialect) Query(sqlStr string) (*list.List, error) {
-	log.Printf("sql : %s\n",sqlStr)
-	if dia.db == nil || dia.isConnected() != nil{
+	log.Printf("sql : %s\n", sqlStr)
+	if dia.db == nil || dia.isConnected() != nil {
 		if dia.driver != "" && dia.source != "" {
 			log.Println("start a new db instance , close the old one ")
-			err := dia.Create(dia.driver,dia.source)
+			err := dia.Create(dia.driver, dia.source)
 			if err != nil {
-				return nil , err
+				return nil, err
 			}
-		}else{
-			return nil , errors.New("db is nil or closed")
+		} else {
+			return nil, errors.New("db is nil or closed")
 		}
 	}
 
@@ -190,7 +189,7 @@ func (dia *Dialect) Query(sqlStr string) (*list.List, error) {
 	return retList, nil
 }
 
-func (dia *Dialect) Close() error{
+func (dia *Dialect) Close() error {
 	return dia.db.Close()
 }
 
@@ -202,7 +201,7 @@ func (dia *Dialect) SetMaxOpenConnections(maxConn int) error {
 	return nil
 }
 
-func (dia *Dialect) SetMaxIdles(maxIdles int)  error{
+func (dia *Dialect) SetMaxIdles(maxIdles int) error {
 	if maxIdles <= 0 {
 		return errors.New("maxIdles must bigger than 0")
 	}
@@ -210,7 +209,7 @@ func (dia *Dialect) SetMaxIdles(maxIdles int)  error{
 	return nil
 }
 
-func (dia *Dialect) SetConnMaxLifeTime(connMaxLifeTime int)  error{
+func (dia *Dialect) SetConnMaxLifeTime(connMaxLifeTime int) error {
 	if connMaxLifeTime <= 0 {
 		return errors.New("connMaxLifeTime must bigger than 0")
 	}
